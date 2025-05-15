@@ -9,7 +9,9 @@ Another thing worth mentioning is that, multiple instances of this board can be 
 Well, I knew this is overkill in the first place, but i was curious to see how robust it could get compared to software implementations. Nevertheless, this is my first attempt at building a pcb and designing a useful circuit that serves pratical use for my dorm's power extension which is often hard to reach. So bear with me on that.
 
 # PCB Overview
+PCB:
 ![PCB 3d Preview](imgs/pcb_3d_preview.png)
+Timing control circuit:
 ![Timing control circuit](imgs/pcb_schematic_sn74hc74.png)
 
 # Todos
