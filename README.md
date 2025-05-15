@@ -14,6 +14,9 @@ PCB:
 Timing control circuit:
 ![Timing control circuit](imgs/pcb_schematic_sn74hc74.png)
 
+# Scripts
+The esphome script to drive the circuit is located under `esphome/qswitch.yaml`.  
+
 # Todos
 - Shrink the pcb dimensions even more
 - Revamp the design with more easily accessible and cheaper components

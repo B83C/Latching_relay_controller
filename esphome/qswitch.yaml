@@ -1,0 +1,164 @@
+esphome:
+ name: qswitch
+ friendly_name: qswitch
+
+esp32:
+  board: esp32-c3-devkitm-1
+
+# deep_sleep:
+#   run_duration: 1s
+#   sleep_duration: 5s
+
+# Enable logging
+# logger:
+#   baud_rate: 0
+
+# Enable Home Assistant API
+# api:
+#   password: "lollel123"
+
+ota:
+  - platform: esphome
+    password: "redacted"
+
+wifi:
+  power_save_mode: HIGH
+  ssid: "DAP"
+  password: "redacted"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "QSwitch Fallback Hotspot"
+    password: "qswitchfallback"
+
+captive_portal:
+    
+web_server:
+  port: 80
+
+output:
+  - platform: gpio
+    pin: GPIO00
+    id: sclock
+  - platform: gpio
+    pin: GPIO01
+    id: latch
+  - platform: gpio
+    pin: GPIO10
+    id: data
+  - platform: gpio
+    pin: GPIO03
+    id: trig
+  
+script:
+  - id: clock_in
+    mode: queued
+    parameters:
+      state: bool
+      mask: bool
+    then:
+      - lambda: |-
+          if (mask) {
+            if (state) {
+              id(data).turn_off();
+            } else {
+              id(data).turn_on();
+            }
+          } else {
+            id(data).turn_off();
+          }
+      - delay: 1ms
+      - output.turn_on: sclock
+      - delay: 1ms
+      - output.turn_off: sclock
+      - lambda: |-
+          if (mask) {
+            if (!state) {
+              id(data).turn_off();
+            } else {
+              id(data).turn_on();
+            }
+          }
+      - delay: 1ms
+      - output.turn_on: sclock
+      - delay: 1ms
+      - output.turn_off: sclock
+      
+  - id: set_state
+    mode: single
+    parameters:
+      relays: int
+      mask: int
+    then:
+      - lambda: |-
+          for(int i = 0; i < 4; i++) {
+              id(clock_in)->execute((relays >> i) & 0b1, (mask >> i) & 0b1);
+          }
+      - script.wait: clock_in
+      - delay: 1ms
+      - output.turn_on: latch
+      - delay: 1ms
+      - output.turn_off: latch
+      - delay: 1ms
+      - output.turn_on: trig
+      - delay: 1ms
+      - output.turn_off: trig
+
+switch:
+  - platform: template
+    optimistic: true
+    name: "Relay0"
+    id: switch0
+    on_turn_on:
+      - script.execute: 
+          id: set_state
+          relays: 0b0001
+          mask: 0b0001
+    on_turn_off:
+      - script.execute: 
+          id: set_state
+          relays: 0b0000
+          mask: 0b0001
+  - platform: template
+    optimistic: true
+    name: "Relay1"
+    id: switch1
+    on_turn_on:
+      - script.execute: 
+          id: set_state
+          relays: 0b0010
+          mask: 0b0010
+    on_turn_off:
+      - script.execute: 
+          id: set_state
+          relays: 0b0000
+          mask: 0b0010
+  - platform: template
+    optimistic: true
+    name: "Relay2"
+    id: switch2
+    on_turn_on:
+      - script.execute: 
+          id: set_state
+          relays: 0b0100
+          mask: 0b0100
+    on_turn_off:
+      - script.execute: 
+          id: set_state
+          relays: 0b0000
+          mask: 0b0100
+  - platform: template
+    optimistic: true
+    name: "Relay3"
+    id: switch3
+    on_turn_on:
+      - script.execute: 
+          id: set_state
+          relays: 0b1000
+          mask: 0b1000
+    on_turn_off:
+      - script.execute: 
+          id: set_state
+          relays: 0b0000
+          mask: 0b1000
+    
